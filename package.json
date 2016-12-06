@@ -1,12 +1,12 @@
 {
-  "name": "sec-xbrl",
+  "name": "ledger-utils",
   "version": "0.0.1",
-  "description": "Tool for parsing the SEC EDGAR DB",
+  "description": "Tool for updating the pricedb and costbasis in ledger",
   "author": {
     "name": "M.S."
   },
   "private": true,
-  "main": "bin/index.js",
+  "main": "src/basis.js",
   "scripts": {
     "setup": "npm run setup:gulp && npm run build",
     "setup:gulp": "node ./node_modules/typescript/lib/tsc.js -t es5 --noEmitOnError --noImplicitAny --removeComments gulpfile.ts",

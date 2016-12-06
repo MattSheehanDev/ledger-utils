@@ -46,5 +46,3 @@ function SplitOnWhitespace(s) {
     return s.split(WhiteSpaceRegEx);
 }
 exports.SplitOnWhitespace = SplitOnWhitespace;
-
-//# sourceMappingURL=utility.js.map
