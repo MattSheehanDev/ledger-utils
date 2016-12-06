@@ -1,0 +1,16 @@
+
+### Emacs ###
+*.*~
+*~
+[#]*[#]
+.\#*
+.[#]*
+
+
+### Application ###
+node_modules/**/*
+**/*.map
+bin/
+build/
+output/
+gulpfile.js

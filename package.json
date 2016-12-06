@@ -1,0 +1,23 @@
+{
+  "name": "sec-xbrl",
+  "version": "0.0.1",
+  "description": "Tool for parsing the SEC EDGAR DB",
+  "author": {
+    "name": "M.S."
+  },
+  "private": true,
+  "main": "bin/index.js",
+  "scripts": {
+    "setup": "npm run setup:gulp && npm run build",
+    "setup:gulp": "node ./node_modules/typescript/lib/tsc.js -t es5 --noEmitOnError --noImplicitAny --removeComments gulpfile.ts",
+
+    "build": "gulp build",
+    "clean": "gulp clean"
+  },
+  "types": "./bin/index.d.ts",
+  "dependencies": {
+    "request": "2.76.0"
+  },
+  "devDependencies": {
+  }
+}

@@ -1,0 +1,33 @@
+{  
+    "files.exclude": {
+        "**/.hg": true,
+        "**/.vs": true,
+        "**/.vscode": false,
+        "**/.hgignore": true,
+        "**/.hgsub": true,
+        "**/.hgsubstate": true,
+        "**/*.sln": true,
+        "**/*.csproj": true,
+        "**/*.csproj.user": true,
+
+        "node_modules/**": true,
+        "*.config": true,
+
+        "src/**/*.js": false,
+        "bin/**": true,
+        "build/**": true,
+        "output/**": true,
+
+        "**/*.js": { "when": "$(basename).ts" },
+        "**/*.map": true
+    },
+
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+
+        "**/bin": true,
+        "**/build": true,
+        "**/output": true
+    }
+}
