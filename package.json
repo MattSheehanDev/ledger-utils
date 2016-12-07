@@ -16,7 +16,8 @@
   },
   "types": "./bin/index.d.ts",
   "dependencies": {
-    "request": "2.76.0"
+    "request": "2.76.0",
+    "minimist": "1.2.0"
   },
   "devDependencies": {
   }

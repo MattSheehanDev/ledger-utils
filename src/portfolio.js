@@ -10,5 +10,5 @@ class Portfolio {
     }
 }
 
-exports.Portfolio = Portfolio;
 
+module.exports = Portfolio;

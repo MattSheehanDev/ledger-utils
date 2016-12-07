@@ -5,14 +5,19 @@ let child_process = require('child_process');
 let exec = child_process.exec;
 
 
-let request = require('request');
+let minimist = require('minimist');
 
-const Portfolio = require('./portfolio').Portfolio;
+
+const Portfolio = require('./portfolio');
+const API = require('./api/api');
+const YahooAPI = require('./api/yahooapi');
 
 const datetime = require('./utilities/datetime').DateTime;
 const fs = require('./utilities/filesystem');
 
 
+let argv = minimist(process.argv.slice(2));
+console.log(argv);
 
 function execute(cmd) {
     return new Promise((resolve, reject) => {
@@ -26,16 +31,6 @@ function execute(cmd) {
         });
     });
 }
-
-function send(uri) {
-    return new Promise((resolve, reject) => {
-        request(uri, (err, response, body) => {
-            if (err) reject(err);
-            else resolve(body);
-        });
-    });
-}
-
 
 
 
@@ -145,6 +140,28 @@ function getPortfolioCostBasis(portfolio) {
 
 
 
+function FetchHistoricalPrices() {
+    let ex = execute(ledgerPrices);
+    ex = ex.then((data) => {
+        let commodities = new Set(data.split('\n'));
+        
+        return YahooAPI.GetHistoricalPrice(Array.from(commodities), '2016-11-30', '2016-11-30');
+    });
+    ex = ex.then((data) => {
+        if (data.query.count > 0 && data.query.results) return;
+        
+        let results = data.query.results;
+        for (let result of results) {
+            process.stdout.write(`P ${result.Date} ${result.Symbol} ${result.Close}\r\n`);
+        }
+
+        process.exit(0);
+    });
+    ex = ex.then(null, (err) => {
+        process.stdout.write('There was an error executing the ledger command.');
+        process.exit(1);
+    });
+}
 
 
 function fetchPrices() {
@@ -154,7 +171,7 @@ function fetchPrices() {
         let commStr = Array.from(commodities).join(',');
 
         let googleUri = `http://finance.google.com/finance/info?client=ig&q=${commStr}`;
-        return send(googleUri);
+        return API.Get(googleUri);
     });
     ex = ex.then((data) => {
         // remove eval() guard //
