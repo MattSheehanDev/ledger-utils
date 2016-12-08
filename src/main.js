@@ -19,12 +19,12 @@ let priceDB = process.env.PRICE_DB || '/home/matt/Dropbox/journals/finances/acco
 function CreatePortolios(fileName, priceDB, portfolios) {
     let promises = [];
     for (let portfolio of portfolios) {
-        // let p = commodity.GetAccountCommodities(portfolio, fileName, priceDB).then((commodities) => {
-        //     return new Portfolio(portfolio, commodities);
-        // });
-        let p = new Promise((resolve, reject) => {
-            resolve(new Portfolio(portfolio, new Set(['ANCFX', 'AWSHX', 'CAIBX'])));
+        let p = commodity.GetAccountCommodities(portfolio, fileName, priceDB).then((commodities) => {
+            return new Portfolio(portfolio, commodities);
         });
+        // let p = new Promise((resolve, reject) => {
+        //     resolve(new Portfolio(portfolio, new Set(['ANCFX', 'AWSHX', 'CAIBX'])));
+        // });
         promises.push(p);
     }
     return Promise.all(promises);

@@ -2,7 +2,7 @@ const execute = require('./utilities/process').execute;
 
 
 function GetAccountCommodities(accountName, fileName, priceDB) {
-    let cmd = `ledger bal ^${accountName} -f ${fileName} \
+    let cmd = `ledger bal ^"${accountName}" -f ${fileName} \
     --price-db ${priceDB} \
     --balance-format "%(scrub(display_total))\n"`;
 
