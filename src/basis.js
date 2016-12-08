@@ -1,45 +1,24 @@
-#!/usr/bin/env node
+const execute = require('./utilities/process').execute;
 
-
-let child_process = require('child_process');
-let exec = child_process.exec;
-
-
-let minimist = require('minimist');
-
-
+const commodity = require('./commodities');
 const Portfolio = require('./portfolio');
-const API = require('./api/api');
-const YahooAPI = require('./api/yahooapi');
-
-const datetime = require('./utilities/datetime').DateTime;
-const fs = require('./utilities/filesystem');
 
 
-let argv = minimist(process.argv.slice(2));
-console.log(argv);
 
-function execute(cmd) {
-    return new Promise((resolve, reject) => {
-        exec(cmd, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-
-            resolve(stdout, stderr);
+function CreatePortolios(fileName, priceDB, portfolios) {
+    let promises = [];
+    for (let portfolio of portfolios) {
+        let p = commodity.GetAccountCommodities(portfolio, fileName, priceDB).then((commodities) => {
+            return new Portfolio(portfolio, commodities);
         });
-    });
+        promises.push(p);
+    }
+    return Promise.all(promises);
 }
 
 
-
-let datFile = process.env.LEDGER_FILE || '/home/matt/Dropbox/journals/finances/accounting/data/general.ledger';
-let priceDB = process.env.PRICE_DB || '/home/matt/Dropbox/journals/finances/accounting/data/prices.ledger';
-
-
-function main() {
-    let load = LoadPortolios([
+function GetCostBasis(fileName, priceDB) {
+    let load = CreatePortolios(fileName, priceDB, [
         'Assets:Portfolio:Vanguard:Brokerage',
         'Assets:Portfolio:Vanguard:SEP',
         'Assets:Portfolio:Vanguard:Roth',
@@ -50,7 +29,7 @@ function main() {
         let promises = [];
         // stringify cost basis for the portfolio
         for (let portfolio of portfolios) {
-            let basis = getPortfolioCostBasis(portfolio);
+            let basis = getPortfolioCostBasis(fileName, priceDB, portfolio);
             basis = basis.then((costs) => {
                 let buf = '';
                 for (let i = 0; i < costs.length - 1; i++) {
@@ -80,50 +59,19 @@ function main() {
     load = load.then(() => {
         process.stdout.write('successfully wrote cost-basis\n');
     });
+    return load;
 }
 
-
-function LoadPortolios(portfolios) {
-    let promises = [];
-    for (let portfolio of portfolios) {
-        let p = getPortfolioCommodities(p).then((commodities) => {
-            return new Portfolio(portfolio, commodities);
-        });
-        promises.push(p);
-    }
-    return Promise.all(promises);
-}
-
-function getPortfolioCommodities(portfolioName) {
-    let cmd = `ledger bal ^${portfolioName} -f ${datFile} \
-    --price-db ${priceDB} \
-    --balance-format "%(scrub(display_total))\n"`;
-
-    let ex = execute(cmd);
-    ex = ex.then((data) => {
-        let commodities = new Set();
-
-        let pairs = data.split('\n');
-        for (let p of pairs) {
-            let c = p.split(/\s/);
-            if (c.length > 1) {
-                commodities.add(c[1]);
-            }
-        }
-        return commodities;
-    });
-    return ex;
-}
 
 //# The problem with cost-basis is that it should only include the commidities
 //# and not any money sitting in the account as well.
 //# This gives us the cost basis of vanguard sep, other accounts would be similar
 //ledger -R --pedantic -f /home/matt/Dropbox/journals/finances/accounting/data/general.ledger bal ^Assets:Portfolio -B -H -I -X $ --limit 'commodity=~/VYM|BLV/' --price-db /home/matt/Dropbox/journals/finances/accounting/data/prices.ledger
-function getPortfolioCostBasis(portfolio) {
+function getPortfolioCostBasis(fileName, priceDB, portfolio) {
     let promises = [];
     // get the cost-basis for each commodity in the portfolio, then for the entire portfolio later.
     for (let c of portfolio.commodities) {
-        let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${datFile} \
+        let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
         -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}`;
         
         promises.push(execute(cmd));
@@ -131,7 +79,7 @@ function getPortfolioCostBasis(portfolio) {
 
 
     // get the cost-basis for the entire portfolio
-    let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${datFile} \
+    let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
     -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}`;    
     promises.push(execute(cmd));
 
@@ -139,72 +87,9 @@ function getPortfolioCostBasis(portfolio) {
 }
 
 
-
-function FetchHistoricalPrices() {
-    let ex = execute(ledgerPrices);
-    ex = ex.then((data) => {
-        let commodities = new Set(data.split('\n'));
-        
-        return YahooAPI.GetHistoricalPrice(Array.from(commodities), '2016-11-30', '2016-11-30');
-    });
-    ex = ex.then((data) => {
-        if (data.query.count > 0 && data.query.results) return;
-        
-        let results = data.query.results;
-        for (let result of results) {
-            process.stdout.write(`P ${result.Date} ${result.Symbol} ${result.Close}\r\n`);
-        }
-
-        process.exit(0);
-    });
-    ex = ex.then(null, (err) => {
-        process.stdout.write('There was an error executing the ledger command.');
-        process.exit(1);
-    });
+module.exports = {
+    GetCostBasis
 }
-
-
-function fetchPrices() {
-    let ex = execute(ledgerPrices);
-    ex = ex.then((data) => {
-        let commodities = new Set(data.split('\n'));
-        let commStr = Array.from(commodities).join(',');
-
-        let googleUri = `http://finance.google.com/finance/info?client=ig&q=${commStr}`;
-        return API.Get(googleUri);
-    });
-    ex = ex.then((data) => {
-        // remove eval() guard //
-        data = data.replace(/\/\//, '');
-        let priceInfos = JSON.parse(data);
-
-        let date = datetime.format(new Date(), 'yyyy/MM/dd');
-
-        for (let info of priceInfos) {
-            let ticker = info.t;
-
-            let price = info.l;
-            if (price && !price.match(/^$/)) {
-                price = '$' + price;
-            }
-            
-            process.stdout.write(`P ${date} ${ticker} ${price}\r\n`);
-        }
-        
-        // we are done
-        process.exit(0);
-    });
-    ex = ex.then(null, (err) => {
-        process.stdout.write('There was an error executing the ledger command.');
-        process.exit(1);
-    });
-}
-
-
-
-
-main();
-
 
 
 

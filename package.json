@@ -6,7 +6,7 @@
     "name": "M.S."
   },
   "private": true,
-  "main": "src/basis.js",
+  "main": "src/main.js",
   "scripts": {
     "setup": "npm run setup:gulp && npm run build",
     "setup:gulp": "node ./node_modules/typescript/lib/tsc.js -t es5 --noEmitOnError --noImplicitAny --removeComments gulpfile.ts",

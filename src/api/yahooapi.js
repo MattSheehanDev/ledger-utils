@@ -9,7 +9,7 @@ const YQL_ENV = encodeURIComponent('http://datatables.org/alltables.env');
 
 
 
-export function GetPrice(ticker) {
+function GetPrice(ticker) {
     // yahoo.finance.quotes
     let symbols = `(${concatTickers(ticker)})`;
     let query = `select * from yahoo.finance.quotes where symbol in ${symbols}`;
@@ -17,7 +17,7 @@ export function GetPrice(ticker) {
     return Get(query);
 }
 
-export function GetHistoricalPrice(ticker, startDate, endDate) {
+function GetHistoricalPrice(ticker, startDate, endDate) {
     // yahoo.finance.historicaldata
     // NOTE: if startDate and endDate does not cover a range when the market was open 
     // then HistoricalResult.results will be null
@@ -40,7 +40,7 @@ function Get(query) {
 
 function concatTickers(ticker) {
     if (Array.isArray(ticker)) {
-        let s = ticker.map((t) => { `"${t}"` });
+        let s = ticker.map((t) => { return `"${t}"` });
         return s.join(', ');
     }
     else {
@@ -82,7 +82,7 @@ module.exports = {
 //     ChangeRealtime: null;
 //     AfterHoursChangeRealtime: null;
 //     DividendShare: string;              // Dividend per share
-//     LastTradeDate: string;              // MM/DD/YYY
+//     LastTradeDate: string;              // MM/DD/YYYY
 //     TradeDate: null;
 //     EarningsShare: string;              // Earnings per share
 //     EPSEstimatedCurrentYear: string;

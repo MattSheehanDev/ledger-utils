@@ -42,3 +42,40 @@ namespace GoogleAPI {
     }
 
 }
+
+
+// function fetchPrices() {
+//     let ex = execute(ledgerPrices);
+//     ex = ex.then((data) => {
+//         let commodities = new Set(data.split('\n'));
+//         let commStr = Array.from(commodities).join(',');
+
+//         let googleUri = `http://finance.google.com/finance/info?client=ig&q=${commStr}`;
+//         return API.Get(googleUri);
+//     });
+//     ex = ex.then((data) => {
+//         // remove eval() guard //
+//         data = data.replace(/\/\//, '');
+//         let priceInfos = JSON.parse(data);
+
+//         let date = datetime.format(new Date(), 'yyyy/MM/dd');
+
+//         for (let info of priceInfos) {
+//             let ticker = info.t;
+
+//             let price = info.l;
+//             if (price && !price.match(/^$/)) {
+//                 price = '$' + price;
+//             }
+            
+//             process.stdout.write(`P ${date} ${ticker} ${price}\r\n`);
+//         }
+        
+//         // we are done
+//         process.exit(0);
+//     });
+//     ex = ex.then(null, (err) => {
+//         process.stdout.write('There was an error executing the ledger command.');
+//         process.exit(1);
+//     });
+// }
