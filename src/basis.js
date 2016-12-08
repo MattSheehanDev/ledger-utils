@@ -1,65 +1,42 @@
 const execute = require('./utilities/process').execute;
 
-const commodity = require('./commodities');
-const Portfolio = require('./portfolio');
+// const Portfolio = require('./portfolio');
 
 
 
-function CreatePortolios(fileName, priceDB, portfolios) {
+
+function GetCostBasis(portfolios, fileName, priceDB) {
     let promises = [];
+    // stringify cost basis for the portfolio
     for (let portfolio of portfolios) {
-        let p = commodity.GetAccountCommodities(portfolio, fileName, priceDB).then((commodities) => {
-            return new Portfolio(portfolio, commodities);
+        let basis = getPortfolioCostBasis(fileName, priceDB, portfolio);
+        basis = basis.then((costs) => {
+            let buf = '';
+            for (let i = 0; i < costs.length - 1; i++) {
+                buf = buf.concat(costs[i]);
+                buf = buf.concat('\r\n');
+            }
+
+            buf = buf.concat('---------------------------\r\n');
+            
+            buf = buf.concat(costs[costs.length - 1]);
+            return buf;
         });
-        promises.push(p);
+        promises.push(basis);
     }
-    return Promise.all(promises);
-}
 
-
-function GetCostBasis(fileName, priceDB) {
-    let load = CreatePortolios(fileName, priceDB, [
-        'Assets:Portfolio:Vanguard:Brokerage',
-        'Assets:Portfolio:Vanguard:SEP',
-        'Assets:Portfolio:Vanguard:Roth',
-        'Assets:Portfolio:American Funds:IRA',
-        'Assets:Portfolio:American Funds:Brokerage'
-    ]);
-    load = load.then((portfolios) => {
-        let promises = [];
-        // stringify cost basis for the portfolio
-        for (let portfolio of portfolios) {
-            let basis = getPortfolioCostBasis(fileName, priceDB, portfolio);
-            basis = basis.then((costs) => {
-                let buf = '';
-                for (let i = 0; i < costs.length - 1; i++) {
-                    buf = buf.concat(costs[i]);
-                    buf = buf.concat('\n');
-                }
-
-                buf = buf.concat('---\n');
-                
-                buf = buf.concat(costs[costs.length - 1]);
-                return buf;
-            });
-            promises.push(basis);
-        }
-        return Promise.all(promises);
-    });
-    load = load.then((strBuffers) => {
+    let costs = Promise.all(promises);
+    costs = costs.then((strBuffers) => {
         // concatenate the individual cost basis's
         let buf = '';
         for (let str of strBuffers) {
             buf = buf.concat(str);
-            buf = buf.concat('\n\n\n\n');
+            buf = buf.concat('\r\n\r\n');
         }
 
         process.stdout.write(buf);
     });
-    load = load.then(() => {
-        process.stdout.write('successfully wrote cost-basis\n');
-    });
-    return load;
+    return costs;
 }
 
 
@@ -68,24 +45,39 @@ function GetCostBasis(fileName, priceDB) {
 //# This gives us the cost basis of vanguard sep, other accounts would be similar
 //ledger -R --pedantic -f /home/matt/Dropbox/journals/finances/accounting/data/general.ledger bal ^Assets:Portfolio -B -H -I -X $ --limit 'commodity=~/VYM|BLV/' --price-db /home/matt/Dropbox/journals/finances/accounting/data/prices.ledger
 function getPortfolioCostBasis(fileName, priceDB, portfolio) {
-    let promises = [];
-    // get the cost-basis for each commodity in the portfolio, then for the entire portfolio later.
-    for (let c of portfolio.commodities) {
-        let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
-        -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}\
-        --balance-format '%(scrub(display_total)) %A'`;
+    // let promises = [];
+    // // get the cost-basis for each commodity in the portfolio, then for the entire portfolio later.
+    // for (let c of portfolio.commodities) {
+    //     let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
+    //     -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}\
+    //     --balance-format '%(scrub(display_total)) ${c} %A'`;
         
-        promises.push(execute(cmd));
-    }
+    //     promises.push(execute(cmd));
+    // }
 
 
-    // get the cost-basis for the entire portfolio
-    let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
-    -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}\
-    --balance-format '%(scrub(display_total)) %A'`;    
-    promises.push(execute(cmd));
+    // // get the cost-basis for the entire portfolio
+    // let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
+    // -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}\
+    // --balance-format '%(scrub(display_total)) %A'`;    
+    // promises.push(execute(cmd));
 
-    return Promise.all(promises);
+    // return Promise.all(promises);
+
+    return new Promise((resolve, reject) => {
+        let costs = [];
+        for (let c of portfolio.commodities) {
+            costs.push(`$3000.00 ${c} ${portfolio.name}`)
+        }
+        costs.push(`$9000.00 ${portfolio.name}`)
+        // resolve([
+        //     `$3000.00 ANCFX ${portfolio.name}`,
+        //     `$2000.00 AWSHX ${portfolio.name}`,
+        //     `$1000.00 CAIBX ${portfolio.name}`,
+        //     `$6000.00 ${portfolio.name}`,
+        // ]);
+        resolve(costs);
+    });
 }
 
 
