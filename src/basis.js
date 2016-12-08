@@ -72,7 +72,8 @@ function getPortfolioCostBasis(fileName, priceDB, portfolio) {
     // get the cost-basis for each commodity in the portfolio, then for the entire portfolio later.
     for (let c of portfolio.commodities) {
         let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
-        -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}`;
+        -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}\
+        --balance-format '%(scrub(display_total)) %A'`;
         
         promises.push(execute(cmd));
     }
@@ -80,7 +81,8 @@ function getPortfolioCostBasis(fileName, priceDB, portfolio) {
 
     // get the cost-basis for the entire portfolio
     let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
-    -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}`;    
+    -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}\
+    --balance-format '%(scrub(display_total)) %A'`;    
     promises.push(execute(cmd));
 
     return Promise.all(promises);
