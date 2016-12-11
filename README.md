@@ -24,6 +24,7 @@
 | ------ | ----------- |
 | --price | get the current price of all portfolio commodities |
 | --historical | give a date string in YYYY/MM/DD format, to get the prices of all commodities for that date |
-| --cost | get the cost basis for all portfolios |  
+| --cost | get the cost basis for all portfolios |
+| --date | the date to use when running the ledger script(s) |
 
 - Matt

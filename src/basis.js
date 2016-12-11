@@ -1,13 +1,26 @@
 const execute = require('./utilities/process').execute;
+const utils = require('./utilities/utility');
 
 
 
+function GetPortfolios(dateStr, fileName) {
+    let cmd = `ledger bal ^Assets:Portfolio -R --pedantic  -f ${fileName} \
+    --balance-format "%A\n" --flat --current --now ${dateStr}`;
 
-function GetCostBasis(portfolios, fileName, priceDB) {
+    let ex = execute(cmd);
+    ex = ex.then((data) => {
+        let accounts = new Set(data.split('\n').filter((v) => { return v != ''; }));
+        return accounts;
+    });
+    return ex;
+}
+
+
+function GetCostBasis(portfolios, dateStr, fileName, priceDB) {
     let promises = [];
     // stringify cost basis for the portfolio
     for (let portfolio of portfolios) {
-        let basis = getPortfolioCostBasis(fileName, priceDB, portfolio);
+        let basis = getPortfolioCostBasis(fileName, dateStr, priceDB, portfolio);
         basis = basis.then((costs) => {
             let buf = '';
             for (let cost of costs) {
@@ -38,20 +51,20 @@ function GetCostBasis(portfolios, fileName, priceDB) {
 //# and not any money sitting in the account as well.
 //# This gives us the cost basis of vanguard sep, other accounts would be similar
 //ledger -R --pedantic -f /home/matt/Dropbox/journals/finances/accounting/data/general.ledger bal ^Assets:Portfolio -B -H -I -X $ --limit 'commodity=~/VYM|BLV/' --price-db /home/matt/Dropbox/journals/finances/accounting/data/prices.ledger
-function getPortfolioCostBasis(fileName, priceDB, portfolio) {
+function getPortfolioCostBasis(fileName, dateStr, priceDB, portfolio) {
     let promises = [];
 
     // get the cost-basis for the entire portfolio
     let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
     -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}\
-    --balance-format '%-15(scrub(display_total)) %A'`;    
+    --balance-format '%-15(round(scrub(display_total))) %A' --now ${dateStr} --current`;    
     promises.push(execute(cmd));
 
     // get the cost-basis for each commodity in the portfolio
     for (let c of portfolio.commodities) {
         let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
         -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}\
-        --balance-format '%-15(scrub(display_total)) ${c}'`;
+        --balance-format '%-15(round(scrub(display_total))) ${c}' --now ${dateStr} --current`;
         
         promises.push(execute(cmd));
     }
@@ -76,6 +89,7 @@ function getPortfolioCostBasis(fileName, priceDB, portfolio) {
 
 
 module.exports = {
+    GetPortfolios,
     GetCostBasis
 }
 

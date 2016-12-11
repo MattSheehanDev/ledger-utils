@@ -8,7 +8,7 @@
             "program": "${workspaceRoot}/src/main.js",
             "stopOnEntry": false,
             // "args": [ "--price" ],
-            "args": [ "--cost" ],
+            "args": [ "--cost", "--date", "2016/01/30" ],
             // "args": [ "--historical", "2016/12/06" ],
             "cwd": "${workspaceRoot}",
             "preLaunchTask": null,

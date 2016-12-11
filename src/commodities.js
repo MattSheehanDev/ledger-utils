@@ -1,9 +1,9 @@
 const execute = require('./utilities/process').execute;
 
 
-function GetAccountCommodities(accountName, fileName, priceDB) {
+function GetAccountCommodities(accountName, dateStr, fileName, priceDB) {
     let cmd = `ledger bal ^"${accountName}" -f ${fileName} \
-    --price-db ${priceDB} \
+    --price-db ${priceDB} --current --now ${dateStr} \
     --balance-format "%(scrub(display_total))\n"`;
 
     let ex = execute(cmd);
