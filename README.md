@@ -1,25 +1,34 @@
-# Prereqs
+# ledger-utils
 
-* **Visual Studio Code 1.7.2**
-* **Nodejs v6.2.0**
-* **NPM (installed with Nodejs) v3.8.9**
+## Prereqs
+
+- **Visual Studio Code 1.7.2**
+- **Nodejs v6.2.0**
+- **NPM (installed with Nodejs) v3.8.9**
 
 
-# Building ledger-utils
-1. Make sure you are in the project directory
-    ```
-    > cd ~/ledger-utils
-    ```
-2. Install the dependencies
-    ```
-    > npm install
-    ```
-3. Run the script
-    ```
-    > ./main.js
-    ```
+## Building ledger-utils
 
-## Command Actions ##
+- Make sure you are in the project directory
+
+```bash
+> cd ~/ledger-utils
+```
+
+- Install the dependencies
+
+```bash
+> npm install
+```
+
+ Run the script
+
+```bash
+> ./main.js
+```
+
+## Command Actions
+
 | Action | Description |
 | ------ | ----------- |
 | --price | get the current price of all portfolio commodities |
@@ -27,4 +36,4 @@
 | --cost | get the cost basis for all portfolios |
 | --date | the date to use when running the ledger script(s) |
 
-- Matt
+// $-$ Matt

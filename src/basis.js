@@ -4,15 +4,13 @@ const utils = require('./utilities/utility');
 
 
 function GetPortfolios(dateStr, fileName) {
-    let cmd = `ledger bal ^Assets:Portfolio -R --pedantic  -f ${fileName} \
-    --balance-format "%A\n" --flat --current --now ${dateStr}`;
+    let cmd = `ledger bal ^Assets:Portfolio -R --pedantic  -f "${fileName}" \
+    --balance-format "%A\n" --flat --current --now "${dateStr}"`;
 
-    let ex = execute(cmd);
-    ex = ex.then((data) => {
+    return execute(cmd).then((data) => {
         let accounts = new Set(data.split('\n').filter((v) => { return v != ''; }));
         return accounts;
     });
-    return ex;
 }
 
 
@@ -54,19 +52,54 @@ function GetCostBasis(portfolios, dateStr, fileName, priceDB) {
 function getPortfolioCostBasis(fileName, dateStr, priceDB, portfolio) {
     let promises = [];
 
-    // get the cost-basis for the entire portfolio
-    let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
-    -B -H -I -X $ --limit 'commodity=~/${portfolio.joinCommodities('|')}/' --price-db ${priceDB}\
-    --balance-format '%-15(round(scrub(display_total))) %A' --now ${dateStr} --current`;    
-    promises.push(execute(cmd));
+    // get the [cost-basis|portfolio name|current-value] for the entire portfolio
+    let cmd = `ledger bal "${portfolio.name}" -R --pedantic -f "${fileName}" \
+-X $ --limit "commodity=~/${portfolio.joinCommodities('|')}/" --price-db "${priceDB}" \
+--balance-format "%(round(quantity(scrub(display_total))))" --now "${dateStr}" --current`;
 
-    // get the cost-basis for each commodity in the portfolio
+    let ex = execute(cmd).then((value) => {
+        let m = utils.Round(value, 2);
+
+        let cmd = `ledger bal "${portfolio.name}" -R --pedantic -f "${fileName}" \
+-B -H -I -X $ --limit "commodity=~/${portfolio.joinCommodities('|')}/" --price-db "${priceDB}" \
+ --now "${dateStr}" --current \
+--balance-format "\
+%-15(round(scrub(display_total))) \
+%A \
+%(justify('${m}', 10, -1, true, color))"`;
+
+        return execute(cmd);
+    });
+    promises.push(ex);
+
+    // get the [cost-basis|num of shares|commodity name|cost-basis/share|current-value] for each commodity in the portfolio
+    // -B, basis
+    // -I, price
     for (let c of portfolio.commodities) {
-        let cmd = `ledger bal ${portfolio.name} -R --pedantic -f ${fileName} \
-        -B -H -I -X $ --limit 'commodity=~/${c}/' --price-db ${priceDB}\
-        --balance-format '%-15(round(scrub(display_total))) ${c}' --now ${dateStr} --current`;
-        
-        promises.push(execute(cmd));
+        let cmd = `ledger bal "${portfolio.name}" -R --pedantic -f "${fileName}" \
+-X $ --limit "commodity=~/${c.name}/" --price-db "${priceDB}" \
+--now "${dateStr}" --current \
+--balance-format "%(round(quantity(scrub(display_total))))"`;
+
+        let ex = execute(cmd).then((value) => {
+            let m = utils.Round(value, 2);
+
+            let cmd = `ledger bal "${portfolio.name}" -R --pedantic -f "${fileName}" \
+-B -H -I -X $ --limit "commodity=~/${c.name}/" --price-db "${priceDB}" \
+--now "${dateStr}" --current \
+--balance-format "\
+%-10(round(scrub(display_total))) \
+%10(${c.count}) \
+%10('${c.name}') \
+%10(round(scrub(display_total) / ${c.count})) \
+%10(${m})"`;
+            // %(justify(${c.count}, 10, -1, true, color)) \
+            // %(justify('${c.name}', 10, -1, true, color)) \
+            return execute(cmd);
+        });
+
+        // promises.push(execute(cmd));
+        promises.push(ex);
     }
 
     return Promise.all(promises);

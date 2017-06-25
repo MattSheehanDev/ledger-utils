@@ -16,6 +16,10 @@ function Round(val, len) {
     return Math.round(val * len) / len;
 }
 exports.Round = Round;
+function FormatMoney(val) {
+    return val.toString().replace(/(\d)(?=(\d{3})+\.)/g, "$1,");
+}
+exports.FormatMoney = FormatMoney;
 function Pad(val, len) {
     var negative = val < 0;
     var str = Math.abs(val).toString();
