@@ -1,11 +1,13 @@
 # ledger-utils
 
+## Archived
+This project has been deprecated and is archived for completeness and reference only.
+
 ## Prereqs
 
 - **Visual Studio Code 1.7.2**
 - **Nodejs v6.2.0**
 - **NPM (installed with Nodejs) v3.8.9**
-
 
 ## Building ledger-utils
 

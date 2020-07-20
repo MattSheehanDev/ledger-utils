@@ -13,8 +13,8 @@ const execute = require('./utilities/process').execute;
 let argv = minimist(process.argv.slice(2));
 
 
-let datFile = process.env.LEDGER_FILE || '/home/matt/Dropbox/journals/finances/accounting/data/general.ledger';
-let priceDB = process.env.LEDGER_PRICES || '/home/matt/Dropbox/journals/finances/accounting/data/prices.ledger';
+let datFile = process.env.LEDGER_FILE;
+let priceDB = process.env.LEDGER_PRICES;
 
 
 
